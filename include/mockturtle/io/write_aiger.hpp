@@ -95,22 +95,34 @@ inline void write_aiger( Ntk const& aig, std::ostream& os )
   static_assert( has_get_node_v<Ntk>, "Ntk does not implement the get_node method" );
   static_assert( has_is_complemented_v<Ntk>, "Ntk does not implement the is_complemented method" );
 
-  assert( aig.is_combinational() && "Network has to be combinational" );
-
   using node = typename Ntk::node;
   using signal = typename Ntk::signal;
 
   uint32_t const M = aig.num_cis() + aig.num_gates();
 
   /* HEADER */
+  uint32_t num_latches = 0;
+  if constexpr (has_num_registers_v<Ntk>) {
+    num_latches = aig.num_registers();
+  }
+
   char string_buffer[1024];
-  sprintf( string_buffer, "aig %u %u %u %u %u\n", M, aig.num_pis(), /*latches*/ 0, aig.num_pos(), aig.num_gates() );
+  sprintf( string_buffer, "aig %u %u %u %u %u\n", M, aig.num_pis(), num_latches, aig.num_pos(), aig.num_gates() );
   os.write( &string_buffer[0], sizeof( unsigned char ) * std::strlen( string_buffer ) );
+
+  // Latches
+  if constexpr (has_foreach_register_v<Ntk>) {
+    aig.foreach_register([&](std::pair<signal, node> reg) {
+      auto f = reg.first;
+      uint32_t num = uint32_t( 2 * aig.node_to_index( aig.get_node( f ) ) + aig.is_complemented( f ) );
+      os << num << "\n";
+    });
+  }
 
   /* POs */
   aig.foreach_po( [&]( signal const& f ) {
-    sprintf( string_buffer, "%u\n", uint32_t( 2 * aig.node_to_index( aig.get_node( f ) ) + aig.is_complemented( f ) ) );
-    os.write( &string_buffer[0], sizeof( unsigned char ) * std::strlen( string_buffer ) );
+    uint32_t num = uint32_t( 2 * aig.node_to_index( aig.get_node( f ) ) + aig.is_complemented( f ) );
+    os << num << "\n";
   } );
 
   /* GATES */
@@ -135,10 +147,7 @@ inline void write_aiger( Ntk const& aig, std::ostream& os )
     detail::encode( buffer, lits[2] - lits[1] );
   } );
 
-  for ( const auto& b : buffer )
-  {
-    os.put( b );
-  }
+  os.write(reinterpret_cast<char*>(buffer.data()), buffer.size());
 
   /* symbol table */
   if constexpr ( has_has_name_v<Ntk> && has_get_name_v<Ntk> )
