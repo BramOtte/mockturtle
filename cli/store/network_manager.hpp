@@ -35,6 +35,7 @@
 
 #include <alice/alice.hpp>
 #include <fmt/format.h>
+#include <mockturtle/networks/sequential.hpp>
 #include <mockturtle/networks/aig.hpp>
 #include <mockturtle/networks/block.hpp>
 #include <mockturtle/networks/klut.hpp>
@@ -64,7 +65,7 @@ enum network_manager_type : uint32_t
 class network_manager
 {
 public:
-  using aig_names = mockturtle::names_view<mockturtle::aig_network>;
+  using aig_names = mockturtle::names_view<mockturtle::sequential<mockturtle::aig_network>>;
   using aig_ntk = std::shared_ptr<aig_names>;
   using mig_names = mockturtle::names_view<mockturtle::mig_network>;
   using mig_ntk = std::shared_ptr<mig_names>;

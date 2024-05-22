@@ -73,7 +73,7 @@ protected:
       /* TODO: check network type: currently it loads only AIGs */
       {
         network_manager& man = store<network_manager>().extend();
-        mockturtle::names_view<mockturtle::aig_network>& ntk_name = man.add_aig();
+        network_manager::aig_names& ntk_name = man.add_aig();
 
         lorina::return_code result = lorina::read_aiger( filename,
                                                          mockturtle::aiger_reader( ntk_name ) );
@@ -93,7 +93,7 @@ protected:
       /* TODO: check network type: currently it loads only AIGs */
       {
         network_manager& man = store<network_manager>().extend();
-        mockturtle::names_view<mockturtle::aig_network>& ntk_name = man.add_aig();
+        network_manager::aig_names& ntk_name = man.add_aig();
         lorina::return_code result = lorina::read_verilog( filename,
                                                            mockturtle::verilog_reader( ntk_name ) );
         if ( result != lorina::return_code::success )
